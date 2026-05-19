@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Criadouro - Aviário</title>
+    <!-- Tailwind CSS para um design moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <!-- BARRA DE NAVEGAÇÃO -->
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-dove text-2xl mr-2"></i>
+                    <span class="font-bold text-xl tracking-wide">SisAviário</span>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="mudarAba('aves')" class="hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fa-solid fa-feather mr-1"></i> Aves</button>
+                    <button onclick="mudarAba('cronograma')" class="hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition"><i class="fa-solid fa-calendar-days mr-1"></i> Cronograma Semanal</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- ================= ABA: CADASTRO DE AVES ================= -->
+        <div id="aba-aves" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <h1 class="text-2xl font-bold text-gray-900">Controle de Pássaros</h1>
+                <button onclick="abrirModalAve()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium shadow-md transition flex items-center justify-center">
+                    <i class="fa-solid fa-plus mr-2"></i> Cadastrar Nova Ave
+                </button>
+            </div>
+
+            <!-- TABELA DE AVES -->
+            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <shadow class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anilha / Identificação</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Espécie / Raça</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Nasc.</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sexo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </shadow>
+                        <tbody id="lista-aves" class="bg-white divide-y divide-gray-200">
+                            <!-- Inserido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ABA: CRONOGRAMA SEMANAL ================= -->
+        <div id="aba-cronograma" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Manejo, Alimentação e Medicamentos</h1>
+                    <p class="text-sm text-gray-500">Planejamento e rotina semanal do criatório</p>
+                </div>
+                <button onclick="imprimirCronograma()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-md transition flex items-center justify-center">
+                    <i class="fa-solid fa-print mr-2"></i> Imprimir Cronograma
+                </button>
+            </div>
+
+            <!-- SELETOR DE AVE PARA O MANEJO -->
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center gap-4">
+                <label for="filtro-ave-cronograma" class="font-medium text-gray-700 whitespace-nowrap">Visualizar rotina da ave:</label>
+                <select id="filtro-ave-cronograma" onchange="atualizarTabelaCronograma()" class="w-full sm:w-64 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    <!-- Opções inseridas via JS -->
+                </select>
+                <button onclick="abrirModalManejo()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-md transition flex items-center justify-center ml-auto">
+                    <i class="fa-solid fa-calendar-plus mr-2"></i> Adicionar Rotina Semanal
+                </button>
+            </div>
+
+            <!-- QUADRO SEMANAL -->
+            <div id="secao-impressao" class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+                <h2 id="titulo-impressao-ave" class="text-xl font-bold text-gray-800 mb-4 hidden-print">Planejamento Semanal</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border-collapse border border-gray-300 text-sm">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700">
+                                <th class="border border-gray-300 p-3 text-left w-1/4">Dia da Semana</th>
+                                <th class="border border-gray-300 p-3 text-left w-1/3 text-orange-700"><i class="fa-solid fa-seedling mr-1"></i> Alimentação</th>
+                                <th class="border border-gray-300 p-3 text-left w-1/3 text-red-700"><i class="fa-solid fa-capsules mr-1"></i> Medicamentos / Suplementos</th>
+                                <th class="border border-gray-300 p-3 text-center w-24 no-print">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-cronograma">
+                            <!-- Inserido via JS baseado nos dias da semana -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= MODAL: CADASTRO/EDIÇÃO DE AVE ================= -->
+    <div id="modal-ave" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden transform transition-all">
+            <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="modal-ave-titulo" class="text-lg font-bold">Cadastrar Ave</h3>
+                <button onclick="fecharModalAve()" class="text-white hover:text-gray-200 text-xl">&times;</button>
+            </div>
+            <form id="form-ave" onsubmit="salvarAve(event)" class="p-6 space-y-4">
+                <input type="hidden" id="ave-idx">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Anilha / Identificação *</label>
+                    <input type="text" id="ave-anilha" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Espécie / Raça *</label>
+                    <input type="text" id="ave-especie" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Data de Nasc.</label>
+                        <input type="date" id="ave-nascimento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Sexo</label>
+                        <select id="ave-sexo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                            <option value="Macho">Macho</option>
+                            <option value="Fêmea">Fêmea</option>
+                            <option value="Não Identificado">Não Identificado</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="ave-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                        <option value="Ativo">Ativo no Plantel</option>
+                        <option value="Filhote">Filhote</option>
+                        <option value="Vendido">Vendido</option>
+                        <option value="Óbito">Óbito</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="fecharModalAve()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium transition">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium shadow-sm transition">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: ADICIONAR MANEJO SEMANAL ================= -->
+    <div id="modal-manejo" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden transform transition-all">
+            <div class="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-bold">Adicionar Rotina Semanal</h3>
+                <button onclick="fecharModalManejo()" class="text-white hover:text-gray-200 text-xl">&times;</button>
+            </div>
+            <form id="form-manejo" onsubmit="salvarManejo(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Selecione a Ave *</label>
+                    <select id="manejo-ave" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                        <!-- Alimentado via JS -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dia da Semana *</label>
+                    <select id="manejo-dia" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                        <option value="Segunda-feira">Segunda-feira</option>
+                        <option value="Terça-feira">Terça-feira</option>
+                        <option value="Quarta-feira">Quarta-feira</option>
+                        <option value="Quinta-feira">Quinta-feira</option>
+                        <option value="Sexta-feira">Sexta-feira</option>
+                        <option value="Sábado">Sábado</option>
+                        <option value="Domingo">Domingo</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Alimentação Específica</label>
+                    <input type="text" id="manejo-alimentacao" placeholder="Ex: Mistura de sementes, Farinhada, Couve" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Medicamento / Suplementação</label>
+                    <input type="text" id="manejo-medicamento" placeholder="Ex: Vitamina E (3 gotas), Vermífugo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="fecharModalManejo()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium transition">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium shadow-sm transition">Vincular Rotina</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ESTILOS EXTRAS PARA IMPRESSÃO LIMPA -->
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #secao-impressao, #secao-impressao * { visibility: visible; }
+            #secao-impressao { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; }
+            .no-print { display: none !important; }
+            #titulo-impressao-ave { display: block !important; margin-bottom: 20px; }
+        }
+    </style>
+
+    <!-- LOGICA JAVASCRIPT -->
+    <script>
+        // Bancos de dados locais (carrega do localStorage se existir)
+        let aves = JSON.parse(localStorage.getItem('aviario_aves')) || [];
+        let cronogramas = JSON.parse(localStorage.getItem('aviario_cronogramas')) || [];
+
+        const diasDaSemana = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"];
+
+        // Inicialização do sistema
+        document.addEventListener("DOMContentLoaded", () => {
+            renderizarAves();
+            atualizarSeletoresAve();
+            atualizarTabelaCronograma();
+        });
+
+        // Alternar abas do painel
+        function mudarAba(aba) {
+            document.getElementById('aba-aves').classList.add('hidden');
+            document.getElementById('aba-cronograma').classList.add('hidden');
+            
+            document.getElementById(`aba-${aba}`).classList.remove('hidden');
+        }
+
+        // --- FUNÇÕES DA ABA AVES ---
+        function renderizarAves() {
+            const tbody = document.getElementById('lista-aves');
+            tbody.innerHTML = '';
+
+            if(aves.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Nenhuma ave cadastrada no momento.</td></tr>`;
+                return;
+            }
+
+            aves.forEach((ave, index) => {
+                let statusColor = 'bg-green-100 text-green-800';
+                if(ave.status === 'Vendido') statusColor = 'bg-blue-100 text-blue-800';
+                if(ave.status === 'Óbito') statusColor = 'bg-red-100 text-red-800';
+                if(ave.status === 'Filhote') statusColor = 'bg-yellow-100 text-yellow-800';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${ave.anilha}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-600">${ave.especie}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-600">${ave.nascimento ? formatarData(ave.nascimento) : 'Não informada'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-600">${ave.sexo}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">${ave.status}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                            <button onclick="editarAve(${index})" class="text-blue-600 hover:text-blue-900"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
+                            <button onclick="excluirAve(${index})" class="text-red-600 hover:text-red-900 ml-2"><i class="fa-solid fa-trash"></i> Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function abrirModalAve() {
+            document.getElementById('form-ave').reset();
+            document.getElementById('ave-idx').value = '';
+            document.getElementById('modal-ave-titulo').innerText = "Cadastrar Ave";
+            document.getElementById('modal-ave').classList.remove('hidden');
+        }
+
+        function fecharModalAve() {
+            document.getElementById('modal-ave').classList.add('hidden');
+        }
+
+        function salvarAve(e) {
+            e.preventDefault();
+            const idx = document.getElementById('ave-idx').value;
+            
+            const novaAve = {
+                anilha: document.getElementById('ave-anilha').value,
+                especie: document.getElementById('ave-especie').value,
+                nascimento: document.getElementById('ave-nascimento').value,
+                sexo: document.getElementById('ave-sexo').value,
+                status: document.getElementById('ave-status').value
+            };
+
+            if(idx === '') {
+                aves.push(novaAve);
+            } else {
+                aves[idx] = novaAve;
+            }
+
+            localStorage.setItem('aviario_aves', JSON.stringify(aves));
+            renderizarAves();
+            atualizarSeletoresAve();
+            atualizarTabelaCronograma();
+            fecharModalAve();
+        }
+
+        function editarAve(index) {
+            const ave = aves[index];
+            document.getElementById('ave-idx').value = index;
+            document.getElementById('ave-anilha').value = ave.anilha;
+            document.getElementById('ave-especie').value = ave.especie;
+            document.getElementById('ave-nascimento').value = ave.nascimento;
+            document.getElementById('ave-sexo').value = ave.sexo;
+            document.getElementById('ave-status').value = ave.status;
+
+            document.getElementById('modal-ave-titulo').innerText = "Editar Ave";
+            document.getElementById('modal-ave').classList.remove('hidden');
+        }
+
+        function excluirAve(index) {
+            if(confirm(`Tem certeza que deseja remover a ave de anilha "${aves[index].anilha}"?`)) {
+                // Remove também as rotinas de manejo associadas a essa anilha
+                cronogramas = cronogramas.filter(c => c.aveAnilha !== aves[index].anilha);
+                localStorage.setItem('aviario_cronogramas', JSON.stringify(cronogramas));
+                
+                aves.splice(index, 1);
+                localStorage.setItem('aviario_aves', JSON.stringify(aves));
+                
+                renderizarAves();
+                atualizarSeletoresAve();
+                atualizarTabelaCronograma();
+            }
+        }
+
+        // --- FUNÇÕES DA ABA CRONOGRAMA SEMANAL ---
+        function atualizarSeletoresAve() {
+            const filtroSelect = document.getElementById('filtro-ave-cronograma');
+            const formSelect = document.getElementById('manejo-ave');
+            
+            filtroSelect.innerHTML = '<option value="Geral">Geral (Todas as Aves)</option>';
+            formSelect.innerHTML = '';
+
+            aves.forEach(ave => {
+                const optText = `${ave.anilha} - ${ave.especie}`;
+                filtroSelect.innerHTML += `<option value="${ave.anilha}">${optText}</option>`;
+                formSelect.innerHTML += `<option value="${ave.anilha}">${optText}</option>`;
+            });
+        }
+
+        function abrirModalManejo() {
+            if(aves.length === 0) {
+                alert("Por favor, cadastre ao menos uma ave antes de definir o manejo semanal.");
+                return;
+            }
+            document.getElementById('form-manejo').reset();
+            document.getElementById('modal-manejo').classList.remove('hidden');
+        }
+
+        function fecharModalManejo() {
+            document.getElementById('modal-manejo').classList.add('hidden');
+        }
+
+        function salvarManejo(e) {
+            e.preventDefault();
+            const aveAnilha = document.getElementById('manejo-ave').value;
+            const dia = document.getElementById('manejo-dia').value;
+            const alimentacao = document.getElementById('manejo-alimentacao').value;
+            const medicamento = document.getElementById('manejo-medicamento').value;
+
+            // Se já existe registro daquela ave naquele dia, sobrepõe ou adiciona
+            const indexExistente = cronogramas.findIndex(c => c.aveAnilha === aveAnilha && c.dia === dia);
+
+            if(indexExistente > -1) {
+                cronogramas[indexExistente] = { aveAnilha, dia, alimentacao, medicamento };
+            } else {
+                cronogramas.push({ aveAnilha, dia, alimentacao, medicamento });
+            }
+
+            localStorage.setItem('aviario_cronogramas', JSON.stringify(cronogramas));
+            atualizarTabelaCronograma();
+            fecharModalManejo();
+        }
+
+        function atualizarTabelaCronograma() {
+            const filtro = document.getElementById('filtro-ave-cronograma').value;
+            const tbody = document.getElementById('corpo-cronograma');
+            const tituloPrint = document.getElementById('titulo-impressao-ave');
+            
+            tbody.innerHTML = '';
+
+            if (filtro === 'Geral') {
+                tituloPrint.innerText = "Planejamento Semanal - Geral do Plantel";
+            } else {
+                tituloPrint.innerText = `Planejamento Semanal - Ave Anilha: ${filtro}`;
+            }
+
+            // Monta a estrutura para cada um dos 7 dias da semana
+            diasDaSemana.forEach(dia => {
+                let itensDia = [];
+                
+                if (filtro === 'Geral') {
+                    itensDia = cronogramas.filter(c => c.dia === dia);
+                } else {
+                    itensDia = cronogramas.filter(c => c.dia === dia && c.aveAnilha === filtro);
+                }
+
+                let htmlAlimentacao = '';
+                let htmlMedicamento = '';
+
+                if(itensDia.length === 0) {
+                    htmlAlimentacao = '<span class="text-gray-400 italic">Nenhum manejo definido</span>';
+                    htmlMedicamento = '<span class="text-gray-400 italic">Nenhum medicamento definido</span>';
+                } else {
+                    itensDia.forEach(item => {
+                        const prefixoAve = filtro === 'Geral' ? `<strong>[Anilha ${item.aveAnilha}]:</strong> ` : '';
+                        
+                        if(item.alimentacao) {
+                            htmlAlimentacao += `<div class="mb-1">${prefixoAve}${item.alimentacao}</div>`;
+                        }
+                        if(item.medicamento) {
+                            htmlMedicamento += `<div class="mb-1">${prefixoAve}${item.medicamento}</div>`;
+                        }
+                    });
+                    
+                    if(!htmlAlimentacao) htmlAlimentacao = '<span class="text-gray-400 italic">-</span>';
+                    if(!htmlMedicamento) htmlMedicamento = '<span class="text-gray-400 italic">-</span>';
+                }
+
+                // Cria o botão de limpar o dia baseado na visão (individual ou geral)
+                let botaAcao = '';
+                if(filtro !== 'Geral' && itensDia.length > 0) {
+                    botaAcao = `<button onclick="limparDiaManejo('${filtro}', '${dia}')" class="text-red-500 hover:text-red-700 text-xs font-semibold"><i class="fa-solid fa-eraser"></i> Limpar</button>`;
+                } else if (filtro === 'Geral') {
+                    botaAcao = `<span class="text-xs text-gray-400">Filtrar ave p/ limpar</span>`;
+                } else {
+                    botaAcao = `-`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition border-b border-gray-200">
+                        <td class="p-3 font-semibold text-gray-700 bg-gray-50 border-r border-gray-300">${dia}</td>
+                        <td class="p-3 border-r border-gray-300 whitespace-pre-line">${htmlAlimentacao}</td>
+                        <td class="p-3 border-r border-gray-300 whitespace-pre-line">${htmlMedicamento}</td>
+                        <td class="p-3 text-center no-print">${botaAcao}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function limparDiaManejo(anilha, dia) {
+            if(confirm(`Remover manejos cadastrados para a Ave ${anilha} na ${dia}?`)) {
+                cronogramas = cronogramas.filter(c => !(c.aveAnilha === anilha && c.dia === dia));
+                localStorage.setItem('aviario_cronogramas', JSON.stringify(cronogramas));
+                atualizarTabelaCronograma();
+            }
+        }
+
+        function imprimirCronograma() {
+            window.print();
+        }
+
+        // --- UTILITÁRIOS ---
+        function formatarData(dataString) {
+            const partes = dataString.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+    </script>
+</body>
+</html>
